@@ -60,7 +60,7 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
                   onChanged: (v) => age = int.tryParse(v) ?? 18,
                 ),
                 DropdownButtonFormField<String>(
-                  value: gender,
+                  initialValue: gender,
                   items: ['Male', 'Female', 'Other'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
                   onChanged: (v) => gender = v!,
                   decoration: const InputDecoration(labelText: 'Gender'),

@@ -5,6 +5,7 @@ import '../../widgets/summary_card.dart';
 import '../../services/export_service.dart';
 import '../households/household_list_screen.dart';
 import '../households/add_household_screen.dart';
+import '../households/map_view_screen.dart';
 import '../analytics/analytics_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -115,6 +116,23 @@ class DashboardScreen extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _QuickActionButton(
+                        icon: Icons.map,
+                        label: 'Map View',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const MapViewScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _QuickActionButton(
                         icon: Icons.download,
                         label: 'Export Data',
                         onTap: () {
@@ -122,6 +140,8 @@ class DashboardScreen extends StatelessWidget {
                         },
                       ),
                     ),
+                    const SizedBox(width: 16),
+                    const Spacer(),
                   ],
                 ),
               ],

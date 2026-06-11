@@ -21,7 +21,7 @@ class HouseholdCard extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         leading: CircleAvatar(
-          backgroundColor: Colors.indigo.withOpacity(0.1),
+          backgroundColor: Colors.indigo.withValues(alpha: 0.1),
           child: const Icon(Icons.house, color: Colors.indigo),
         ),
         title: Text(
