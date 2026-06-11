@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../models/household.dart';
 import '../../models/member.dart';
 import '../../providers/survey_provider.dart';
+import '../../widgets/member_card.dart';
 
 class AddHouseholdScreen extends StatefulWidget {
   const AddHouseholdScreen({super.key});
@@ -26,13 +27,20 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
 
   void _getLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+    if (!serviceEnabled) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location services are disabled.')));
+      }
+      return;
+    }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) return;
     }
+
+    if (permission == LocationPermission.deniedForever) return;
 
     Position position = await Geolocator.getCurrentPosition();
     setState(() {
@@ -53,7 +61,10 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(decoration: const InputDecoration(labelText: 'Name'), onChanged: (v) => name = v),
+                TextField(
+                  decoration: const InputDecoration(labelText: 'Full Name'),
+                  onChanged: (v) => name = v,
+                ),
                 TextField(
                   decoration: const InputDecoration(labelText: 'Age'),
                   keyboardType: TextInputType.number,
@@ -64,6 +75,22 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
                   items: ['Male', 'Female', 'Other'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
                   onChanged: (v) => gender = v!,
                   decoration: const InputDecoration(labelText: 'Gender'),
+                ),
+                DropdownButtonFormField<String>(
+                  initialValue: education,
+                  items: ['None', 'Primary', 'Secondary', 'Tertiary', 'Post-Graduate'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                  onChanged: (v) => education = v!,
+                  decoration: const InputDecoration(labelText: 'Education'),
+                ),
+                TextField(
+                  decoration: const InputDecoration(labelText: 'Occupation'),
+                  onChanged: (v) => occupation = v,
+                ),
+                DropdownButtonFormField<String>(
+                  initialValue: marital,
+                  items: ['Single', 'Married', 'Divorced', 'Widowed'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                  onChanged: (v) => marital = v!,
+                  decoration: const InputDecoration(labelText: 'Marital Status'),
                 ),
               ],
             ),
@@ -113,7 +140,7 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
       Navigator.pop(context);
     } else if (_members.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one member')),
+        const SnackBar(content: Text('Please add at least one family member')),
       );
     }
   }
@@ -127,36 +154,72 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            TextFormField(controller: _houseNoController, decoration: const InputDecoration(labelText: 'House Number')),
-            TextFormField(controller: _addressController, decoration: const InputDecoration(labelText: 'Address')),
-            TextFormField(controller: _localityController, decoration: const InputDecoration(labelText: 'Locality')),
-            TextFormField(controller: _headNameController, decoration: const InputDecoration(labelText: 'Head of Family')),
-            TextFormField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone Number')),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _houseNoController,
+                      decoration: const InputDecoration(labelText: 'House Number', icon: Icon(Icons.numbers)),
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
+                    TextFormField(
+                      controller: _addressController,
+                      decoration: const InputDecoration(labelText: 'Address', icon: Icon(Icons.location_on)),
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
+                    TextFormField(
+                      controller: _localityController,
+                      decoration: const InputDecoration(labelText: 'Locality', icon: Icon(Icons.map)),
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
+                    TextFormField(
+                      controller: _headNameController,
+                      decoration: const InputDecoration(labelText: 'Head of Family', icon: Icon(Icons.person)),
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
+                    TextFormField(
+                      controller: _phoneController,
+                      decoration: const InputDecoration(labelText: 'Phone Number', icon: Icon(Icons.phone)),
+                      keyboardType: TextInputType.phone,
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             ListTile(
-              title: const Text('GPS Coordinates'),
-              subtitle: Text(_lat != null ? 'Lat: $_lat, Lng: $_lng' : 'Not captured'),
-              trailing: IconButton(icon: const Icon(Icons.location_on), onPressed: _getLocation),
-              tileColor: Colors.grey.shade100,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              title: const Text('GPS Coordinates', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(_lat != null ? 'Lat: ${_lat!.toStringAsFixed(6)}, Lng: ${_lng!.toStringAsFixed(6)}' : 'Capture current location'),
+              trailing: ElevatedButton.icon(
+                onPressed: _getLocation,
+                icon: const Icon(Icons.my_location),
+                label: const Text('Locate'),
+              ),
+              tileColor: Colors.indigo.withValues(alpha: 0.05),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Family Members (${_members.length})', style: Theme.of(context).textTheme.titleMedium),
-                TextButton.icon(onPressed: _addMember, icon: const Icon(Icons.add), label: const Text('Add Member')),
+                Text(
+                  'Family Members (${_members.length})',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _addMember,
+                  icon: const Icon(Icons.person_add),
+                  label: const Text('Add'),
+                ),
               ],
             ),
-            ..._members.map((m) => Card(
-              child: ListTile(
-                title: Text(m.name),
-                subtitle: Text('Age: ${m.age}, Gender: ${m.gender}'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                  onPressed: () => setState(() => _members.remove(m)),
-                ),
-              ),
+            const SizedBox(height: 8),
+            ..._members.map((m) => MemberCard(
+              member: m,
+              onDelete: () => setState(() => _members.remove(m)),
             )),
             const SizedBox(height: 32),
             ElevatedButton(
@@ -164,10 +227,12 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Save Survey Record'),
+              child: const Text('SUBMIT SURVEY RECORD', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

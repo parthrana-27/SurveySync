@@ -87,4 +87,24 @@ class SurveyProvider with ChangeNotifier {
     }
     return distribution;
   }
+
+  Map<String, int> get occupationDistribution {
+    Map<String, int> distribution = {};
+    for (var h in _households) {
+      for (var m in h.members) {
+        distribution[m.occupation] = (distribution[m.occupation] ?? 0) + 1;
+      }
+    }
+    return distribution;
+  }
+
+  Map<String, int> get educationDistribution {
+    Map<String, int> distribution = {};
+    for (var h in _households) {
+      for (var m in h.members) {
+        distribution[m.education] = (distribution[m.education] ?? 0) + 1;
+      }
+    }
+    return distribution;
+  }
 }

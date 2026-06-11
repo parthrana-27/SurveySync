@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/survey_provider.dart';
 import '../../widgets/summary_card.dart';
+import '../../widgets/household_card.dart';
 import '../../services/export_service.dart';
 import '../households/household_list_screen.dart';
 import '../households/add_household_screen.dart';
@@ -18,8 +19,8 @@ class DashboardScreen extends StatelessWidget {
         title: const Text('SurveySync Dashboard'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {},
+            icon: const Icon(Icons.logout),
+            onPressed: () => Navigator.of(context).pop(),
           ),
         ],
       ),
@@ -66,7 +67,7 @@ class DashboardScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 Text(
                   'Quick Actions',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -144,6 +145,39 @@ class DashboardScreen extends StatelessWidget {
                     const Spacer(),
                   ],
                 ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Recent Surveys',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const HouseholdListScreen()),
+                        );
+                      },
+                      child: const Text('View All'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (provider.households.isEmpty)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: Text('No recent surveys', style: TextStyle(color: Colors.grey)),
+                    ),
+                  )
+                else
+                  ...provider.households.take(3).map((h) => HouseholdCard(
+                    household: h,
+                    onTap: () {},
+                    onDelete: () => provider.deleteHousehold(h.id),
+                  )),
               ],
             ),
           );
@@ -202,14 +236,22 @@ class _QuickActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
+          color: Colors.white,
+          border: Border.all(color: Colors.grey.shade200),
           borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           children: [
             Icon(icon, size: 32, color: Colors.indigo),
             const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           ],
         ),
       ),

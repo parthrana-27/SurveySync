@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/survey_provider.dart';
 import '../../widgets/household_card.dart';
+import '../../widgets/search_bar_widget.dart';
+import '../../widgets/empty_state_widget.dart';
 import 'add_household_screen.dart';
 
 class HouseholdListScreen extends StatelessWidget {
@@ -14,22 +16,9 @@ class HouseholdListScreen extends StatelessWidget {
         title: const Text('Households'),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: TextField(
-              onChanged: (value) => context.read<SurveyProvider>().setSearchQuery(value),
-              decoration: InputDecoration(
-                hintText: 'Search by house number or head...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
+          child: SearchBarWidget(
+            hintText: 'Search by house number or head...',
+            onChanged: (value) => context.read<SurveyProvider>().setSearchQuery(value),
           ),
         ),
       ),
@@ -37,15 +26,9 @@ class HouseholdListScreen extends StatelessWidget {
         builder: (context, provider, child) {
           final households = provider.households;
           if (households.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.search_off, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('No households found', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
+            return const EmptyStateWidget(
+              message: 'No households found',
+              icon: Icons.search_off,
             );
           }
           return ListView.builder(
@@ -56,7 +39,7 @@ class HouseholdListScreen extends StatelessWidget {
               return HouseholdCard(
                 household: household,
                 onTap: () {
-                  // Navigate to details/edit
+                  // Navigate to details/edit if needed
                 },
                 onDelete: () {
                   _showDeleteDialog(context, provider, household.id);
