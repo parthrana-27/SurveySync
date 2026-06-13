@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../dashboard/dashboard_screen.dart';
+import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -106,8 +107,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       : const Text('Login'),
                 ),
                 const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SignupScreen()),
+                    );
+                  },
+                  child: const Text('Don\'t have an account? Sign Up'),
+                ),
+                const SizedBox(height: 16),
                 const Text(
-                  'Hint: admin / admin123',
+                  'Default: admin / admin123',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey, fontSize: 12),
                 ),

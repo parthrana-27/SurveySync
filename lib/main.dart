@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'services/database_service.dart';
 import 'providers/survey_provider.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/dashboard/dashboard_screen.dart';
+import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +45,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         themeMode: ThemeMode.light,
-        home: const LoginScreen(),
+        home: AuthService.isLoggedIn ? const DashboardScreen() : const LoginScreen(),
       ),
     );
   }

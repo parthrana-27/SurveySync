@@ -4,6 +4,8 @@ import '../../providers/survey_provider.dart';
 import '../../widgets/summary_card.dart';
 import '../../widgets/household_card.dart';
 import '../../services/export_service.dart';
+import '../../services/auth_service.dart';
+import '../auth/login_screen.dart';
 import '../households/household_list_screen.dart';
 import '../households/add_household_screen.dart';
 import '../households/map_view_screen.dart';
@@ -20,7 +22,14 @@ class DashboardScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () async {
+              await AuthService.logout();
+              if (context.mounted) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              }
+            },
           ),
         ],
       ),
@@ -65,6 +74,17 @@ class DashboardScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
+                if (AuthService.enumeratorId != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      'Welcome, Enumerator: ${AuthService.enumeratorId}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.indigo,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 Text(
                   'Quick Actions',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
