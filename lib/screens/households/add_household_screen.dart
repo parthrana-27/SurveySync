@@ -53,53 +53,60 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
     showDialog(
       context: context,
       builder: (context) {
+        final memberFormKey = GlobalKey<FormState>();
         String name = '', gender = 'Male', education = 'None', occupation = 'Student', marital = 'Single';
         int age = 18;
         return AlertDialog(
           title: const Text('Add Family Member'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  decoration: const InputDecoration(labelText: 'Full Name'),
-                  onChanged: (v) => name = v,
-                ),
-                TextField(
-                  decoration: const InputDecoration(labelText: 'Age'),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) => age = int.tryParse(v) ?? 18,
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: gender,
-                  items: ['Male', 'Female', 'Other'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
-                  onChanged: (v) => gender = v!,
-                  decoration: const InputDecoration(labelText: 'Gender'),
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: education,
-                  items: ['None', 'Primary', 'Secondary', 'Tertiary', 'Post-Graduate'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                  onChanged: (v) => education = v!,
-                  decoration: const InputDecoration(labelText: 'Education'),
-                ),
-                TextField(
-                  decoration: const InputDecoration(labelText: 'Occupation'),
-                  onChanged: (v) => occupation = v,
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: marital,
-                  items: ['Single', 'Married', 'Divorced', 'Widowed'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
-                  onChanged: (v) => marital = v!,
-                  decoration: const InputDecoration(labelText: 'Marital Status'),
-                ),
-              ],
+          content: Form(
+            key: memberFormKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Full Name'),
+                    onChanged: (v) => name = v,
+                    validator: (v) => v!.isEmpty ? 'Name required' : null,
+                  ),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Age'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (v) => age = int.tryParse(v) ?? 18,
+                    validator: (v) => (int.tryParse(v ?? '') == null) ? 'Enter valid age' : null,
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: gender,
+                    items: ['Male', 'Female', 'Other'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
+                    onChanged: (v) => gender = v!,
+                    decoration: const InputDecoration(labelText: 'Gender'),
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: education,
+                    items: ['None', 'Primary', 'Secondary', 'Tertiary', 'Post-Graduate'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                    onChanged: (v) => education = v!,
+                    decoration: const InputDecoration(labelText: 'Education'),
+                  ),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Occupation'),
+                    onChanged: (v) => occupation = v,
+                    validator: (v) => v!.isEmpty ? 'Occupation required' : null,
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: marital,
+                    items: ['Single', 'Married', 'Divorced', 'Widowed'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                    onChanged: (v) => marital = v!,
+                    decoration: const InputDecoration(labelText: 'Marital Status'),
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
             TextButton(
               onPressed: () {
-                if (name.isNotEmpty) {
+                if (memberFormKey.currentState!.validate()) {
                   setState(() {
                     _members.add(Member(
                       id: const Uuid().v4(),
@@ -192,7 +199,7 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
             const SizedBox(height: 16),
             ListTile(
               title: const Text('GPS Coordinates', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(_lat != null ? 'Lat: ${_lat!.toStringAsFixed(6)}, Lng: ${_lng!.toStringAsFixed(6)}' : 'Capture current location'),
+              subtitle: Text(_lat != null ? 'Lat: \${_lat!.toStringAsFixed(6)}, Lng: \${_lng!.toStringAsFixed(6)}' : 'Capture current location'),
               trailing: ElevatedButton.icon(
                 onPressed: _getLocation,
                 icon: const Icon(Icons.my_location),
@@ -206,7 +213,7 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Family Members (${_members.length})',
+                  'Family Members (\${_members.length})',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 ElevatedButton.icon(

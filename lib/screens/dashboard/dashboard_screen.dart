@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/survey_provider.dart';
 import '../../widgets/summary_card.dart';
 import '../../widgets/household_card.dart';
+import '../../widgets/empty_state_widget.dart';
 import '../../services/export_service.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
@@ -10,6 +11,7 @@ import '../households/household_list_screen.dart';
 import '../households/add_household_screen.dart';
 import '../households/map_view_screen.dart';
 import '../analytics/analytics_screen.dart';
+import '../settings/user_management_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -20,6 +22,16 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('SurveySync Dashboard'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.manage_accounts),
+            tooltip: 'User Management',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UserManagementScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -186,18 +198,21 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 if (provider.households.isEmpty)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: Text('No recent surveys', style: TextStyle(color: Colors.grey)),
-                    ),
+                  const EmptyStateWidget(
+                    message: 'No surveys conducted yet',
+                    icon: Icons.history,
                   )
                 else
                   ...provider.households.take(3).map((h) => HouseholdCard(
                     household: h,
-                    onTap: () {},
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Details for House ${h.houseNumber}')),
+                      );
+                    },
                     onDelete: () => provider.deleteHousehold(h.id),
                   )),
+                const SizedBox(height: 32),
               ],
             ),
           );
@@ -211,25 +226,72 @@ class DashboardScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Export Data'),
-        content: const Text('Select export format:'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Share: Opens the system sharing menu.'),
+            SizedBox(height: 8),
+            Text('Download: Saves directly to your Downloads folder (Android).'),
+          ],
+        ),
         actions: [
-          TextButton(
-            onPressed: () {
-              final json = ExportService.toJson(provider.households);
-              debugPrint(json);
+          PopupMenuButton<String>(
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text('JSON', style: TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold)),
+            ),
+            onSelected: (value) async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('JSON Exported to Console')));
+              if (value == 'share') {
+                await ExportService.shareJson(provider.households);
+              } else {
+                final path = await ExportService.downloadToStorage(provider.households, 'json');
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(path != null ? 'Downloaded to: \$path' : 'Download failed')),
+                  );
+                }
+              }
             },
-            child: const Text('JSON'),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'share', child: Text('Share JSON')),
+              const PopupMenuItem(value: 'download', child: Text('Download JSON')),
+            ],
+          ),
+          PopupMenuButton<String>(
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text('CSV', style: TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold)),
+            ),
+            onSelected: (value) async {
+              Navigator.pop(context);
+              if (value == 'share') {
+                await ExportService.shareCsv(provider.households);
+              } else {
+                final path = await ExportService.downloadToStorage(provider.households, 'csv');
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(path != null ? 'Downloaded to: \$path' : 'Download failed')),
+                  );
+                }
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'share', child: Text('Share CSV')),
+              const PopupMenuItem(value: 'download', child: Text('Download CSV')),
+            ],
           ),
           TextButton(
             onPressed: () {
-              final csv = ExportService.toCsv(provider.households);
-              debugPrint(csv);
+              final users = ExportService.exportUsers();
+              debugPrint('--- REGISTERED USERS ---');
+              debugPrint(users);
+              debugPrint('------------------------');
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('CSV Exported to Console')));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Users Exported to Console')));
             },
-            child: const Text('CSV'),
+            child: const Text('Debug Users'),
           ),
         ],
       ),

@@ -1,18 +1,32 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/household.dart';
 import '../models/member.dart';
 
 class DatabaseService {
+  // Singleton Pattern
+  static final DatabaseService _instance = DatabaseService._internal();
+  factory DatabaseService() => _instance;
+  DatabaseService._internal();
+
   static const String householdBoxName = 'households';
   static const String authBoxName = 'auth';
   static const String usersBoxName = 'users';
 
   static Future<void> init() async {
-    await Hive.initFlutter();
+    if (kIsWeb) {
+      // On Web, Hive uses IndexedDB. initFlutter handles this automatically.
+      await Hive.initFlutter();
+    } else {
+      // On Mobile/Desktop, explicitly set the path to ensure persistence
+      final directory = await getApplicationDocumentsDirectory();
+      await Hive.initFlutter(directory.path);
+    }
     
     // Register Adapters
-    Hive.registerAdapter(HouseholdAdapter());
-    Hive.registerAdapter(MemberAdapter());
+    if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(HouseholdAdapter());
+    if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(MemberAdapter());
     
     // Open Boxes
     await Hive.openBox<Household>(householdBoxName);
@@ -26,6 +40,7 @@ class DatabaseService {
     }
   }
 
+  // Getters for boxes
   Box<Household> get householdBox => Hive.box<Household>(householdBoxName);
   Box get authBox => Hive.box(authBoxName);
   Box get usersBox => Hive.box(usersBoxName);
@@ -55,6 +70,7 @@ class DatabaseService {
   bool get isLoggedIn => authBox.get('isLoggedIn', defaultValue: false);
   String? get enumeratorId => authBox.get('enumeratorId');
 
+  // Household CRUD
   List<Household> getAllHouseholds() {
     return householdBox.values.toList();
   }
@@ -71,7 +87,13 @@ class DatabaseService {
     await householdBox.delete(id);
   }
 
-  Future<void> clearAll() async {
-    await householdBox.clear();
+  // Diagnostics
+  String get storagePath {
+    if (kIsWeb) return 'Web Browser (IndexedDB)';
+    try {
+      return Hive.box(authBoxName).path ?? 'Path missing in box';
+    } catch (e) {
+      return 'Error getting path: $e';
+    }
   }
 }
