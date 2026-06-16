@@ -6,6 +6,7 @@ import '../../models/household.dart';
 import '../../models/member.dart';
 import '../../providers/survey_provider.dart';
 import '../../widgets/member_card.dart';
+import '../../services/notification_service.dart';
 
 class AddHouseholdScreen extends StatefulWidget {
   const AddHouseholdScreen({super.key});
@@ -144,6 +145,13 @@ class _AddHouseholdScreenState extends State<AddHouseholdScreen> {
         members: _members,
       );
       context.read<SurveyProvider>().addHousehold(household);
+      
+      NotificationService.showNotification(
+        id: DateTime.now().millisecond,
+        title: 'Survey Submitted!',
+        body: 'Household No: \${household.houseNumber} has been successfully recorded.',
+      );
+
       Navigator.pop(context);
     } else if (_members.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -5,10 +5,12 @@ import 'providers/survey_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'services/auth_service.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DatabaseService.init();
+  await NotificationService.init();
   runApp(const MyApp());
 }
 
